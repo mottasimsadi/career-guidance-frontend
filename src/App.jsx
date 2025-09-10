@@ -34,7 +34,7 @@ const CareerGuidanceChatbot = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Sample career data - will be replaced with Flask API calls for better use in future
+  // Sample career data - will be replaced with Flask API calls
   const careerSkillsData = {
     "frontend developer": [
       "HTML/CSS",
