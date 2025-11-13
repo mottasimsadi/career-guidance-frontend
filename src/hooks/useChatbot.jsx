@@ -5,8 +5,6 @@ import TrendingSkills from "../components/TrendingSkills";
 import LoadingIndicator from "../components/LoadingIndicator";
 
 export const useChatbot = () => {
-  console.log('🚀 useChatbot hook loaded - version 2.2');
-  
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -25,6 +23,7 @@ export const useChatbot = () => {
     userSkills: [],
   });
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const addMessage = (type, content, component = null) => {
     const newMessage = {
@@ -53,54 +52,46 @@ export const useChatbot = () => {
   };
 
   const handleCareerSelection = async (career) => {
-    console.log('handleCareerSelection called with:', career);
-    
     let matchedCareerKey = Object.keys(careerSkillsData).find(
       (key) => key.includes(career) || career.includes(key)
     );
-    
-    console.log('matchedCareerKey:', matchedCareerKey);
 
     if (matchedCareerKey) {
-      console.log('Matched career found, proceeding with API call');
+      // console.log('Matched career found, proceeding with API call');
       
       // Show loading message with loading component
       addMessage(
         "bot",
-        `Excellent choice! Analyzing live job postings for a ${matchedCareerKey}...`,
-        <LoadingIndicator message={`Fetching real-time job data for ${matchedCareerKey}...`} />
+        `Excellent choice! Analyzing live job postings for a ${matchedCareerKey}...`
       );
+      setIsLoading(true);
 
       try {
-        console.log('Starting API call to fetch live job data...');
+        // console.log('Starting API call to fetch live job data...');
         
         // Create AbortController for timeout handling
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
-        
+        const timeoutId = setTimeout(() => controller.abort(), 120000);
+
         const response = await fetch(
-          `http://localhost:3000/api/trending-skills?career=${encodeURIComponent(
+          `https://career-guidance-backend-five.vercel.app/trending-skills?career=${encodeURIComponent(
             matchedCareerKey
           )}`,
           {
             signal: controller.signal,
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { "Content-Type": "application/json" },
           }
         );
-        
+
         clearTimeout(timeoutId);
-        console.log('API response status:', response.status);
-        
+
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
         }
-        
+
         const liveData = await response.json();
-        console.log('Successfully received live data:', liveData);
-        
-        // Successfully got live data - update user profile
+        setIsLoading(false);
+
         setUserProfile((prev) => ({
           ...prev,
           career: matchedCareerKey,
@@ -108,7 +99,7 @@ export const useChatbot = () => {
         }));
 
         // Show success message with live data
-        console.log('✅ Adding success message with TrendingSkills component');
+        // console.log('✅ Adding success message with TrendingSkills component');
         addMessage(
           "bot",
           "✅ Analysis complete! Here are the latest insights based on real-time job data:",
@@ -116,7 +107,7 @@ export const useChatbot = () => {
         );
 
         // Show the skills list from LIVE data ONLY after API success
-        console.log('🎯 Adding skills list message');
+        // console.log('🎯 Adding skills list message');
         const skillsList = liveData.trending_skills
           .slice(0, 8)
           .map((skill) => `• ${skill}`)
@@ -128,24 +119,15 @@ export const useChatbot = () => {
         );
 
         // Ask about skill roadmap immediately (no timeout)
-        console.log('❓ Adding roadmap question');
+        // console.log('❓ Adding roadmap question');
         addMessage(
           "bot",
           "Would you like me to create a detailed skill development roadmap for you? (Type 'yes' or 'no')"
         );
         setCurrentStage("skill_map_request");
-        
       } catch (error) {
-        console.error("Failed to fetch live job data:", error);
-        console.log("Error details:", error.message);
-        console.log("Error name:", error.name);
-        
-        // Check if it was an abort/timeout error
-        if (error.name === 'AbortError') {
-          console.log('Request was aborted due to timeout');
-        }
-        
-        // Fallback to mock data ONLY when API actually fails
+        setIsLoading(false);
+
         const mockSkills = careerSkillsData[matchedCareerKey];
         
         // Update user profile with mock data
@@ -155,18 +137,18 @@ export const useChatbot = () => {
           suggestedSkills: mockSkills,
         }));
 
-        // Show error message and fallback
-        const errorMessage = error.name === 'AbortError' 
-          ? 'The request took too long (over 2 minutes)' 
-          : error.message;
-          
+        const errorMessage =
+          error.name === "AbortError"
+            ? "The request took too long (over 2 minutes)"
+            : error.message;
+
         addMessage(
           "bot",
           `⚠️ I had trouble accessing live job market data (${errorMessage}). No worries! I'll use my comprehensive knowledge base instead.`
         );
 
         // Show the skills list from MOCK data (only on actual error)
-        console.log('📚 Adding mock skills list');
+        // console.log('📚 Adding mock skills list');
         const skillsList = mockSkills
           .slice(0, 8)
           .map((skill) => `• ${skill}`)
@@ -270,19 +252,18 @@ export const useChatbot = () => {
     }, 1500);
   };
 
-  const handleSendMessage = async () => {
-    console.log('💬 handleSendMessage called with inputValue:', inputValue);
-    if (!inputValue.trim()) return;
-    addMessage("user", inputValue);
-    const userInput = inputValue.toLowerCase().trim();
-    console.log('🔍 Processing user input:', userInput, 'in stage:', currentStage);
+  const handleSendMessage = async (text) => {
+    const messageToSend = typeof text === "string" ? text : inputValue;
+    if (!messageToSend.trim()) return;
+
+    addMessage("user", messageToSend);
+    const userInput = messageToSend.toLowerCase().trim();
     setInputValue("");
+
     simulateTyping();
     setTimeout(() => {
-      console.log('🔄 Timeout reached, switching on currentStage:', currentStage);
       switch (currentStage) {
         case "career_selection":
-          console.log('🎯 Calling handleCareerSelection with:', userInput);
           handleCareerSelection(userInput);
           break;
         case "skill_map_request":
@@ -292,10 +273,7 @@ export const useChatbot = () => {
           handleUserSkillsInput(userInput);
           break;
         default:
-          addMessage(
-            "bot",
-            "Let's start over! What career are you interested in?"
-          );
+          addMessage("bot", "Let's start over!");
           setCurrentStage("career_selection");
       }
     }, 1200);
@@ -304,13 +282,14 @@ export const useChatbot = () => {
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessage(inputValue);
     }
   };
 
   return {
     messages,
     isTyping,
+    isLoading,
     inputValue,
     setInputValue,
     handleSendMessage,

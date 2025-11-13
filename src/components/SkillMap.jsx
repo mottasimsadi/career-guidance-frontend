@@ -3,320 +3,176 @@ import {
   MapPin,
   CheckCircle,
   Circle,
-  ArrowRight,
-  Star,
   Target,
   Trophy,
   BookOpen,
+  Play,
 } from "lucide-react";
 
 const SkillMap = ({ skills, userSkills = [], career }) => {
-  const getUserSkillStatus = (skill) => {
-    return userSkills.some(
+  const getUserSkillStatus = (skill) =>
+    userSkills.some(
       (userSkill) =>
         skill.toLowerCase().includes(userSkill.toLowerCase()) ||
         userSkill.toLowerCase().includes(skill.toLowerCase())
     );
-  };
 
   const getSkillLevel = (index) => {
     if (index < 4)
-      return { level: "Foundation", color: "green", icon: BookOpen };
-    if (index < 8) return { level: "Core Skills", color: "blue", icon: Target };
-    return { level: "Advanced", color: "purple", icon: Trophy };
+      return { level: "Foundation", color: "blue", icon: BookOpen };
+    if (index < 8) return { level: "Core", color: "purple", icon: Target };
+    return { level: "Advanced", color: "green", icon: Trophy };
   };
 
-  const completedSkills = skills.filter((skill) =>
-    getUserSkillStatus(skill)
-  ).length;
-  const overallProgress = Math.round((completedSkills / skills.length) * 100);
+  const completedSkills = skills.filter(getUserSkillStatus).length;
+  const overallProgress =
+    skills.length > 0 ? Math.round((completedSkills / skills.length) * 100) : 0;
+
+  const colorClasses = {
+    blue: { text: "text-blue-300", border: "border-blue-500" },
+    purple: { text: "text-purple-300", border: "border-purple-500" },
+    green: { text: "text-green-300", border: "border-green-500" },
+  };
+
+  const getSnakeNumber = (index) => {
+    const row = Math.floor(index / 4);
+    const col = index % 4;
+    return row % 2 === 0 ? index + 1 : (row + 1) * 4 - col;
+  };
 
   return (
-    <div className="skill-map bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 rounded-2xl border border-indigo-200 shadow-lg my-4">
+    <div className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700 my-4">
       <div className="flex items-center mb-6">
-        <div className="bg-indigo-600 p-2 rounded-lg mr-3">
+        <div className="bg-purple-600 p-2 rounded-lg mr-3">
           <MapPin className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h3 className="text-2xl font-bold text-gray-800">
+          <h3 className="text-2xl font-bold text-gray-200">
             Skill Development Roadmap
           </h3>
-          <p className="text-gray-600">
-            Your personalized learning path for {career}
+          <p className="text-gray-400">
+            Your path for{" "}
+            <span className="text-purple-400 font-semibold">{career}</span>
           </p>
         </div>
       </div>
 
-      {/* Overall Progress Bar */}
-      <div className="mb-8 p-4 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl border border-indigo-200">
+      <div className="mb-8 p-4 bg-gray-900/50 rounded-xl border border-gray-700">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center">
-            <Target className="w-5 h-5 text-indigo-600 mr-2" />
-            <span className="font-semibold text-indigo-800">
+            <Target className="w-5 h-5 text-purple-400 mr-2" />
+            <span className="font-semibold text-gray-300">
               Overall Progress
             </span>
           </div>
-          <div className="text-2xl font-bold text-indigo-800">
+          <div className="text-2xl font-bold text-gray-200">
             {overallProgress}%
           </div>
         </div>
-        <div className="bg-white rounded-full h-3">
+        <div className="bg-gray-700 rounded-full h-3">
           <div
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 h-3 rounded-full transition-all duration-1000"
+            className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full"
             style={{ width: `${overallProgress}%` }}
           ></div>
         </div>
-        <p className="text-sm text-indigo-600 mt-2">
+        <p className="text-sm text-gray-400 mt-2">
           {completedSkills} of {skills.length} skills mastered
         </p>
       </div>
 
-      {/* Skills Flow - Snake Pattern */}
-      <div className="space-y-8">
-        <div className="relative">
-          {/* Calculate grid dimensions */}
-          {(() => {
-            const cols = 4; // Fixed 4 columns for snake pattern
-            const rows = Math.ceil(skills.length / cols);
+      <div className="grid grid-cols-4 gap-x-8 gap-y-16 pb-12">
+        {skills.map((skill, index) => {
+          const isCompleted = getUserSkillStatus(skill);
+          const levelInfo = getSkillLevel(index);
+          const colors = colorClasses[levelInfo.color];
+          const Icon = levelInfo.icon;
 
-            return (
-              <div className="space-y-12">
-                {" "}
-                {/* Increased spacing for arrows */}
-                {Array.from({ length: rows }, (_, rowIndex) => {
-                  const isEvenRow = rowIndex % 2 === 0;
-                  const startIndex = rowIndex * cols;
-                  const endIndex = Math.min(startIndex + cols, skills.length);
-                  const rowSkills = skills.slice(startIndex, endIndex);
+          const row = Math.floor(index / 4);
+          const isEvenRow = row % 2 === 0;
+          const isLastInRow = (index + 1) % 4 === 0;
+          const isFirstInRow = index % 4 === 0;
+          const isLastSkill = index === skills.length - 1;
 
-                  // Reverse order for odd rows (0-indexed, so odd visual rows)
-                  const displaySkills = !isEvenRow
-                    ? [...rowSkills].reverse()
-                    : rowSkills;
-                  const displayIndices = !isEvenRow
-                    ? Array.from(
-                        { length: rowSkills.length },
-                        (_, i) => endIndex - 1 - i
-                      )
-                    : Array.from(
-                        { length: rowSkills.length },
-                        (_, i) => startIndex + i
-                      );
+          const connectorColor = "border-purple-600";
+          const arrowColor = "text-purple-600";
 
-                  return (
-                    <div key={rowIndex} className="relative">
-                      {/* Row of skills */}
-                      <div className="grid grid-cols-4 gap-8">
-                        {" "}
-                        {/* Increased gap */}
-                        {displaySkills.map((skill, colIndex) => {
-                          const actualIndex = displayIndices[colIndex];
-                          const isCompleted = getUserSkillStatus(skill);
-                          const skillInfo = getSkillLevel(actualIndex);
-                          const IconComponent = skillInfo.icon;
-
-                          const isLastSkill = actualIndex === skills.length - 1;
-                          const nextSkillCompleted = !isLastSkill
-                            ? getUserSkillStatus(skills[actualIndex + 1])
-                            : false;
-
-                          // Arrow direction logic
-                          const isLastInRow = !isEvenRow
-                            ? colIndex === 0
-                            : colIndex === displaySkills.length - 1;
-                          const showHorizontalArrow =
-                            !isLastInRow && !isLastSkill;
-                          const showVerticalArrow =
-                            isLastInRow && !isLastSkill && rowIndex < rows - 1;
-
-                          return (
-                            <div
-                              key={actualIndex}
-                              className="relative flex flex-col items-center"
-                            >
-                              <div
-                                className={`relative w-full h-32 rounded-xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-105 ${
-                                  isCompleted
-                                    ? skillInfo.color === "green"
-                                      ? "bg-gradient-to-br from-green-500 to-green-600 border-green-400 shadow-lg shadow-green-200"
-                                      : skillInfo.color === "blue"
-                                      ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 shadow-lg shadow-blue-200"
-                                      : "bg-gradient-to-br from-purple-500 to-purple-600 border-purple-400 shadow-lg shadow-purple-200"
-                                    : skillInfo.color === "green"
-                                    ? "bg-white border-green-300 text-green-700 hover:bg-green-50"
-                                    : skillInfo.color === "blue"
-                                    ? "bg-white border-blue-300 text-blue-700 hover:bg-blue-50"
-                                    : "bg-white border-purple-300 text-purple-700 hover:bg-purple-50"
-                                }`}
-                              >
-                                {/* Level Badge */}
-                                <div
-                                  className={`absolute -top-2 left-3 px-2 py-1 rounded-full text-xs font-medium ${
-                                    skillInfo.color === "green"
-                                      ? "bg-green-100 text-green-800"
-                                      : skillInfo.color === "blue"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : "bg-purple-100 text-purple-800"
-                                  }`}
-                                >
-                                  {skillInfo.level}
-                                </div>
-
-                                {/* Completion Status */}
-                                <div className="absolute -top-2 -right-2">
-                                  <div
-                                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                      isCompleted
-                                        ? "bg-green-500"
-                                        : "bg-gray-300"
-                                    }`}
-                                  >
-                                    {isCompleted ? (
-                                      <CheckCircle className="w-4 h-4 text-white" />
-                                    ) : (
-                                      <Circle className="w-4 h-4 text-gray-500" />
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Card Content */}
-                                <div className="p-4 h-full flex flex-col justify-between">
-                                  <div className="flex items-start justify-between">
-                                    <IconComponent
-                                      className={`w-5 h-5 ${
-                                        isCompleted
-                                          ? "text-white"
-                                          : skillInfo.color === "green"
-                                          ? "text-green-600"
-                                          : skillInfo.color === "blue"
-                                          ? "text-blue-600"
-                                          : "text-purple-600"
-                                      }`}
-                                    />
-                                    {isCompleted && (
-                                      <Star className="w-4 h-4 text-yellow-300" />
-                                    )}
-                                  </div>
-
-                                  <div>
-                                    <h4
-                                      className={`font-semibold text-sm mb-1 leading-tight ${
-                                        isCompleted
-                                          ? "text-white"
-                                          : "text-gray-800"
-                                      }`}
-                                    >
-                                      {skill}
-                                    </h4>
-                                    {isCompleted && (
-                                      <span className="text-xs bg-white bg-opacity-30 px-2 py-1 rounded text-white font-medium">
-                                        ✓ Completed
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Skill Number */}
-                              <div
-                                className={`mt-3 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${
-                                  skillInfo.color === "green"
-                                    ? "bg-green-500"
-                                    : skillInfo.color === "blue"
-                                    ? "bg-blue-500"
-                                    : "bg-purple-500"
-                                }`}
-                              >
-                                {actualIndex + 1}
-                              </div>
-
-                              {/* Horizontal Arrow - Fixed positioning */}
-                              {showHorizontalArrow && (
-                                <div
-                                  className={`absolute top-16 z-10 ${
-                                    !isEvenRow ? "left-0" : "right-0"
-                                  } ${
-                                    !isEvenRow
-                                      ? "-translate-x-6"
-                                      : "translate-x-6"
-                                  }`}
-                                >
-                                  <div className="bg-white rounded-full p-2 shadow-md border">
-                                    <ArrowRight
-                                      className={`w-5 h-5 ${
-                                        !isEvenRow ? "transform rotate-180" : ""
-                                      } ${
-                                        nextSkillCompleted || isCompleted
-                                          ? "text-green-500"
-                                          : "text-gray-400"
-                                      }`}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Vertical Arrow - Fixed positioning */}
-                              {showVerticalArrow && (
-                                <div className="absolute top-48 left-1/2 transform -translate-x-1/2 z-10">
-                                  <div className="bg-white rounded-full p-2 shadow-md border">
-                                    <ArrowRight
-                                      className={`w-5 h-5 transform rotate-90 ${
-                                        nextSkillCompleted || isCompleted
-                                          ? "text-green-500"
-                                          : "text-gray-400"
-                                      }`}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+          return (
+            <div key={index} className="relative">
+              {/* HORIZONTAL CONNECTOR (L to R on even rows) */}
+              {isEvenRow && !isLastInRow && !isLastSkill && (
+                <div
+                  className={`absolute top-1/2 left-full w-8 h-px -translate-y-1/2 border-t-2 border-dashed ${connectorColor} z-[-1]`}
+                >
+                  <div
+                    className={`absolute top-1/2 right-[-10px] -translate-y-1/2 ${arrowColor}`}
+                  >
+                    <Play fill="currentColor" size={16} />
+                  </div>
+                </div>
+              )}
+              {/* HORIZONTAL CONNECTOR (R to L on odd rows) */}
+              {!isEvenRow && !isFirstInRow && !isLastSkill && (
+                <div
+                  className={`absolute top-1/2 right-full w-8 h-px -translate-y-1/2 border-t-2 border-dashed ${connectorColor} z-[-1]`}
+                >
+                  <div
+                    className={`absolute top-1/2 left-[-10px] -translate-y-1/2 ${arrowColor} transform -scale-x-100`}
+                  >
+                    <Play fill="currentColor" size={16} />
+                  </div>
+                </div>
+              )}
+              {/* VERTICAL CONNECTOR */}
+              {!isLastSkill &&
+                ((isEvenRow && isLastInRow) ||
+                  (!isEvenRow && isFirstInRow)) && (
+                  <div
+                    className={`absolute top-full left-1/2 w-px h-16 -translate-x-1/2 border-l-2 border-dashed ${connectorColor} z-[-1]`}
+                  >
+                    <div
+                      className={`absolute bottom-[-10px] left-1/2 -translate-x-1/2 ${arrowColor} transform rotate-90`}
+                    >
+                      <Play fill="currentColor" size={16} />
                     </div>
-                  );
-                })}
+                  </div>
+                )}
+
+              <div
+                className={`relative h-36 p-3 flex flex-col justify-between bg-gray-800/70 border-2 rounded-xl transition-colors ${
+                  isCompleted ? colors.border : "border-gray-700"
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <Icon className={`w-5 h-5 ${colors.text}`} />
+                    <span className={`text-xs font-semibold ${colors.text}`}>
+                      {levelInfo.level}
+                    </span>
+                  </div>
+                  <div
+                    className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      isCompleted ? "bg-green-500" : "bg-gray-600"
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle size={16} className="text-white" />
+                    ) : (
+                      <Circle size={16} className="text-gray-400" />
+                    )}
+                  </div>
+                </div>
+                <h4 className="font-semibold text-sm text-gray-200 break-words">
+                  {skill}
+                </h4>
               </div>
-            );
-          })()}
-        </div>
-
-        {/* Flow Indicator */}
-        <div className="text-center">
-          <p className="text-sm text-gray-600 bg-white rounded-lg p-3 inline-block shadow-sm border">
-            🐍 Follow the snake pattern: Left→Right on first row, then
-            Right→Left on second row, and so on...
-          </p>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 p-4 bg-white rounded-xl border border-gray-200">
-        <h4 className="font-semibold text-gray-800 mb-3">
-          Learning Path Legend
-        </h4>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center">
-            <BookOpen className="w-4 h-4 text-green-600 mr-2" />
-            <span className="text-sm text-gray-700">
-              Foundation (Skills 1-4)
-            </span>
-          </div>
-          <div className="flex items-center">
-            <Target className="w-4 h-4 text-blue-600 mr-2" />
-            <span className="text-sm text-gray-700">
-              Core Skills (Skills 5-8)
-            </span>
-          </div>
-          <div className="flex items-center">
-            <Trophy className="w-4 h-4 text-purple-600 mr-2" />
-            <span className="text-sm text-gray-700">Advanced (Skills 9+)</span>
-          </div>
-        </div>
-        <p className="text-xs text-gray-600 mt-2">
-          Follow the numbered sequence and arrows. Complete foundation skills
-          before moving to core skills.
-        </p>
+              <div
+                className={`absolute -bottom-11 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white bg-gradient-to-br from-purple-600 to-blue-500`}
+              >
+                {getSnakeNumber(index)}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

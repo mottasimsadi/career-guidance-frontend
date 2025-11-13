@@ -1,21 +1,18 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
 
-const LoadingIndicator = ({ message = "Analyzing job market data..." }) => {
+const LoadingIndicator = ({ message = "Fetching real-time job data..." }) => {
   return (
-    <div className="my-4 p-6 bg-white rounded-2xl border border-gray-200 shadow-md">
-      <div className="flex items-center justify-center space-x-3">
-        <Loader2 className="w-6 h-6 text-indigo-600 animate-spin" />
-        <span className="text-gray-700 font-medium">{message}</span>
+    <div className="py-6 bg-gray-800/20">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center justify-center p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <Loader2 className="w-5 h-5 text-purple-400 animate-spin mr-3" />
+          <span className="text-gray-300">{message}</span>
+        </div>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          This may take up to a minute...
+        </p>
       </div>
-      <div className="mt-4 flex justify-center space-x-1">
-        <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce"></div>
-        <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-        <div className="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-      </div>
-      <p className="text-xs text-gray-500 mt-3 text-center">
-        This may take up to a minute depending on data availability
-      </p>
     </div>
   );
 };

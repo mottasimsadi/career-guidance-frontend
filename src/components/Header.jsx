@@ -1,21 +1,10 @@
 import React from "react";
-import { Bot } from "lucide-react";
 
 const Header = () => {
   return (
-    <div className="bg-white shadow-sm border-b p-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-          <div className="bg-indigo-600 p-2 rounded-lg mr-3">
-            <Bot className="w-6 h-6 text-white" />
-          </div>
-          Career Skills Roadmap Assistant
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Get personalized skill recommendations and visual learning paths
-        </p>
-      </div>
-    </div>
+    <header className="p-4 bg-[rgba(24,28,60,0.85)] backdrop-blur-md border-b border-[rgba(255,255,255,0.05)] text-center text-[22px] font-bold text-[#9eb8ff] tracking-wider shadow-lg">
+      🤖 AI Career Guidance Agent
+    </header>
   );
 };
 

@@ -1,2 +1,6 @@
 @import "tailwindcss";
 
+body {
+  /* Set the base background to a deep black */
+  @apply bg-black text-gray-300;
+}

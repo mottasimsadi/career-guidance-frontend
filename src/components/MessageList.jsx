@@ -1,8 +1,10 @@
 import React, { useRef, useEffect } from "react";
 import Message from "./Message";
 import TypingIndicator from "./TypingIndicator";
+import LoadingIndicator from "./LoadingIndicator";
 
-const MessageList = ({ messages, isTyping }) => {
+const MessageList = ({ messages, isTyping, isLoading }) => {
+  // Receive isLoading
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -11,14 +13,15 @@ const MessageList = ({ messages, isTyping }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [messages, isTyping, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {messages.map((message) => (
+    <div className="flex-1 overflow-y-auto">
+      <div className="flex flex-col">
+        {messages.slice(1).map((message) => (
           <Message key={message.id} message={message} />
         ))}
+        {isLoading && <LoadingIndicator />} {/* Render based on state */}
         {isTyping && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>

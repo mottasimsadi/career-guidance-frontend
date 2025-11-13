@@ -1,4 +1,22 @@
-/* Add to src/App.css */
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111; /* Dark track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a00e0; /* Purple thumb */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8e2de2; /* Lighter purple on hover */
+}
+
+/* Base styles for the skill map (if needed) */
 .skill-map {
   overflow-x: auto;
 }
@@ -7,18 +25,4 @@
   .skill-map {
     font-size: 14px;
   }
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
 }
