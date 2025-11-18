@@ -4,7 +4,7 @@ import { Bot } from "lucide-react";
 const TypingIndicator = () => {
   return (
     <div className="py-6 bg-gray-800/20">
-      <div className="max-w-6xl mx-auto flex px-4">
+      <div className="max-w-7xl mx-auto flex px-4">
         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center mr-4 mt-1">
           <Bot className="w-5 h-5 text-white" />
         </div>

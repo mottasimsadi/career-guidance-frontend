@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📘 Skill Recommendations | AI Career Guidance Agent</title>
+<style>
+  body {
+    background: linear-gradient(180deg,#0f1222 0%,#0b0d1a 100%);
+    color:#e8ebff;
+    font-family:Inter,system-ui,sans-serif;
+    margin:0;
+    padding:20px;
+  }
+  h1{color:#7c9cff;text-align:center;margin-bottom:10px}
+  .timestamp{text-align:center;font-size:13px;color:#7c9cff;margin-bottom:20px}
+  .section-title{
+    color:#88a4ff;font-size:1.4rem;text-align:center;
+    border-bottom:2px solid #28305a;padding-bottom:4px;
+    max-width:850px;margin:40px auto 10px
+  }
+  .category{
+    background:#181c2f;border-radius:12px;padding:18px 20px;
+    margin:20px auto;max-width:850px;
+    box-shadow:0 4px 12px rgba(0,0,0,.4);overflow:hidden
+  }
+  .category.collapsed .category-content{display:none}
+  .category-title{
+    color:#9fb5ff;font-size:1.2rem;margin-bottom:10px;
+    border-bottom:1px solid #2a2f4f;padding-bottom:6px;
+    cursor:pointer;display:flex;justify-content:space-between;
+    align-items:center;user-select:none
+  }
+  .category-title span{font-size:1rem;color:#cdd4ff}
+  .skill-card{
+    background:#1c2140;border-radius:10px;padding:15px 18px;
+    margin:12px 0;transition:.2s
+  }
+  .skill-card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.45)}
+  .skill-name{font-weight:600;color:#b1c2ff;font-size:1.05rem}
+  .skill-reason{color:#cdd4ff;font-size:.95rem;margin-top:5px;line-height:1.5}
+  .input-section{
+    background:#181c2f;border-radius:12px;padding:20px;
+    margin:30px auto;max-width:850px;box-shadow:0 4px 12px rgba(0,0,0,.4)
+  }
+  label{color:#9aa0c5;font-size:14px}
+  input{width:70%;padding:10px 14px;border-radius:6px;border:none;margin-top:8px;font-size:14px}
+  button{
+    background:#7c9cff;color:#0b1023;cursor:pointer;font-weight:600;
+    padding:10px 16px;border:none;border-radius:6px;margin-left:10px
+  }
+  button:hover{background:#9eb3ff}
+  .muted{color:#9aa0c5;font-size:14px}
+  .loading{text-align:center;font-size:1rem;color:#aab5e9;margin-top:20px}
+</style>
+</head>
+<body>
+<h1>📘 Recommended Skill List</h1>
+<div class="timestamp" id="timestamp"></div>
+<div id="skillsContainer" class="loading">Loading skills…</div>
+
+<div class="input-section">
+  <label for="knownInput" class="muted">Enter skills you already know (comma-separated):</label><br>
+  <input id="knownInput" type="text" placeholder="e.g., JavaScript, HTML, CSS"/>
+  <button id="removeBtn">Remove Known Skills</button>
+</div>
+
+<script>
+const BASE_URL='http://127.0.0.1:8000';
+const container=document.getElementById('skillsContainer');
+const knownInput=document.getElementById('knownInput');
+const removeBtn=document.getElementById('removeBtn');
+
+function toggleCategory(header){
+  const cat=header.parentElement;
+  const icon=header.querySelector("span");
+  cat.classList.toggle("collapsed");
+  icon.textContent=cat.classList.contains("collapsed")?"▶":"▼";
+}
+
+function renderSkills(data){
+  container.innerHTML="";
+
+  // detect top-level sections (core_skills, supporting_skills, advanced_skills, professional_skills)
+  const sections=Object.entries(data);
+  if(sections.length===0){
+    container.innerHTML="<p style='text-align:center;'>❌ No skills found.</p>";
+    return;
+  }
+
+  sections.forEach(([sectionName,sectionData])=>{
+    if(typeof sectionData!=="object") return;
+    const sectionTitle=sectionName.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+    container.innerHTML+=`<div class="section-title">${sectionTitle}</div>`;
+
+    const categories=Object.entries(sectionData);
+    categories.forEach(([catName,skills],i)=>{
+      const catTitle=catName.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+      const expanded=i<2?"":"collapsed";
+      const arrow=i<2?"▼":"▶";
+
+      const skillCards=(skills||[]).map(s=>`
+        <div class="skill-card">
+          <div class="skill-name">${s.name||"Unnamed Skill"}</div>
+          <div class="skill-reason">${s.reason||"No description provided."}</div>
+        </div>`).join("");
+
+      container.innerHTML+=`
+        <div class="category ${expanded}">
+          <div class="category-title" onclick="toggleCategory(this)">
+            <div>${catTitle}</div><span>${arrow}</span>
+          </div>
+          <div class="category-content">${skillCards}</div>
+        </div>`;
+    });
+  });
+
+  const now=new Date();
+  document.getElementById("timestamp").textContent=`Last updated: ${now.toLocaleString()}`;
+}
+
+async function loadSkills(){
+  try{
+    const res=await fetch(BASE_URL+'/get_skills');
+    const data=await res.json();
+    // Some backends wrap it in {skills:{...}}
+    const content=data.skills?data.skills:data;
+    renderSkills(content);
+  }catch(e){
+    console.error(e);
+    container.innerHTML="<p style='text-align:center;'>⚠️ Failed to load skills. Check backend.</p>";
+  }
+}
+
+removeBtn.addEventListener('click',async()=>{
+  const known=knownInput.value.trim();
+  if(!known) return alert("Please enter at least one skill name.");
+  const knownList=known.split(',').map(x=>x.trim());
+  try{
+    const res=await fetch(BASE_URL+'/remove_known_skills',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({known_skills:knownList})
+    });
+    const data=await res.json();
+    const content=data.updated_skills?data.updated_skills:data;
+    renderSkills(content);
+    alert("✅ Known skills removed and list updated!");
+  }catch(e){alert("⚠️ Backend connection failed.");}
+});
+
+loadSkills();
+</script>
+</body>
+</html>

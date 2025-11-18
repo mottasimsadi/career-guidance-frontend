@@ -9,7 +9,7 @@ const Welcome = ({ onSuggestionClick }) => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col items-center justify-center h-full text-center px-4">
+    <div className="max-w-7xl mx-auto flex flex-col items-center justify-center h-full text-center px-4">
       <div className="mb-4">
         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
           <Bot className="w-12 h-12 text-white" />

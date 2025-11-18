@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📘 Learning Plan</title>
+<style>
+  body {
+    background: linear-gradient(180deg, #0f1222 0%, #0b0d1a 100%);
+    color: #e8ebff;
+    font-family: "Inter", system-ui, sans-serif;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    color: #7c9cff;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .timestamp {
+    text-align: center;
+    font-size: 13px;
+    color: #7c9cff;
+    margin-bottom: 20px;
+  }
+
+  .section {
+    background: #181c2f;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 25px auto;
+    max-width: 850px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  .section h2 {
+    color: #9fb5ff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 0;
+  }
+
+  .overview {
+    background: #1b1f36;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .stage-card {
+    background: #1c2140;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .stage-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45);
+  }
+
+  .stage-card h3 {
+    color: #b1c2ff;
+    border-bottom: 1px solid #2a2f4f;
+    padding-bottom: 4px;
+    margin-top: 14px;
+    font-size: 1.05rem;
+  }
+
+  .theme {
+    font-style: italic;
+    color: #7c9cff;
+    margin-bottom: 12px;
+  }
+
+  ul {
+    list-style-type: "🔹 ";
+    padding-left: 20px;
+  }
+
+  .hours {
+    text-align: right;
+    font-size: 13px;
+    color: #8ea1ff;
+    margin-top: 10px;
+  }
+
+  .project {
+    background: #20254a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 8px 0;
+  }
+
+  .project strong {
+    color: #a8b8ff;
+  }
+
+  .tips {
+    background: #1b1f36;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 25px;
+  }
+
+  .tips h3 {
+    color: #9fb5ff;
+    border-bottom: 1px solid #2a2f4f;
+    padding-bottom: 6px;
+  }
+
+  .tips ul {
+    list-style-type: "💡 ";
+    line-height: 1.6;
+  }
+
+  .calibration p {
+    margin: 8px 0;
+    line-height: 1.6;
+  }
+
+  .recommend {
+    background: #0b0f22;
+    padding: 12px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    color: #cdd4ff;
+  }
+</style>
+</head>
+
+<body>
+  <h1>📘 Your Personalized Learning Plan</h1>
+  <div class="timestamp" id="timestamp"></div>
+
+  <div class="section">
+    <h2>🎯 Learning Plan</h2>
+    <div id="plan">Loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>⏱️ Time & Effort Calibration</h2>
+    <div id="calibration"></div>
+  </div>
+
+<script>
+const BASE_URL = "http://127.0.0.1:8000";
+
+function makeList(arr, icon = "🔹") {
+  return Array.isArray(arr) && arr.length
+    ? `<ul>${arr.map((x) => `<li>${x}</li>`).join("")}</ul>`
+    : "<p style='color:#888;'>None</p>";
+}
+
+async function loadPlan() {
+  const planDiv = document.getElementById("plan");
+  const calDiv = document.getElementById("calibration");
+
+  try {
+    const res = await fetch(`${BASE_URL}/get_learning_plan`);
+    const data = await res.json();
+
+    if (data.error) {
+      planDiv.textContent = data.error;
+      return;
+    }
+
+    // ✅ Corrected structure: your backend returns {"plan": {...}, "calibration": {...}}
+    const plan = data.plan;
+    const calibration = data.calibration;
+
+    // --- Overview ---
+    let html = `<div class="overview"><h3>📖 Overview</h3><p>${plan.overview}</p></div>`;
+
+    // --- Quarters or Months ---
+    plan.plan.forEach((p, i) => {
+      const label = p.quarter
+        ? `Quarter ${p.quarter}`
+        : p.month
+        ? `Month ${p.month}`
+        : `Stage ${i + 1}`;
+      const dur = p.duration_months
+        ? `${p.duration_months} month${p.duration_months > 1 ? "s" : ""}`
+        : "";
+      const hrs = p.available_hours || p.estimated_hours || "";
+
+      html += `
+      <div class="stage-card">
+        <h3>📅 ${label}${dur ? ` <span style='font-size:0.9rem;color:#9aa0c5;'>(${dur})</span>` : ""}</h3>
+        <div class="theme">${p.theme || ""}</div>
+
+        <h3>🎯 Skills Focus</h3>${makeList(p.skills_focus)}
+        <h3>📚 Topics</h3>${makeList(p.topics)}
+        <h3>🎓 Objectives</h3>${makeList(p.objectives)}
+
+        <h3>🧩 Projects</h3>
+        ${
+          Array.isArray(p.projects)
+            ? p.projects
+                .map((x) =>
+                  typeof x === "string"
+                    ? `<div class="project">${x}</div>`
+                    : `<div class="project"><strong>${x.name}</strong><br><em>${x.description}</em><br><span style="color:#9aa0c5;">${x.expected_output ? `📝 ${x.expected_output}` : ""}</span></div>`
+                )
+                .join("")
+            : "<p style='color:#888;'>None</p>"
+        }
+
+        <h3>📘 Resources</h3>${makeList(p.resources)}
+        ${hrs ? `<div class="hours">⏱ Estimated Hours: ${hrs}</div>` : ""}
+      </div>`;
+    });
+
+    // --- Tips ---
+    if (Array.isArray(plan.tips) && plan.tips.length) {
+      html += `<div class="tips"><h3>💡 Tips for Success</h3><ul>${plan.tips
+        .map((t) => `<li>${t}</li>`)
+        .join("")}</ul></div>`;
+    }
+
+    planDiv.innerHTML = html;
+
+    // --- Calibration ---
+    if (calibration) {
+      const rec = calibration.recommendation || {};
+      calDiv.innerHTML = `
+        <div class="calibration">
+          <p><strong>Feasibility:</strong> ${calibration.feasibility || "N/A"}</p>
+          <p><strong>Analysis:</strong> ${calibration.analysis || "N/A"}</p>
+          <div class="recommend"><strong>Recommendation:</strong>\n${rec.message_to_user || "N/A"}</div>
+        </div>`;
+    } else {
+      calDiv.innerHTML = "<p style='color:#888;'>No calibration data.</p>";
+    }
+
+    // --- Timestamp ---
+    const now = new Date();
+    document.getElementById("timestamp").textContent =
+      `Last updated: ${now.toLocaleString()}`;
+  } catch (e) {
+    planDiv.textContent = "⚠️ Failed to load plan.";
+    console.error("Error loading plan:", e);
+  }
+}
+
+loadPlan();
+</script>
+</body>
+</html>

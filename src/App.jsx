@@ -1,11 +1,14 @@
-import React from "react";
-import Header from "./components/Header";
-import MessageList from "./components/MessageList";
+import React, { useRef, useEffect } from "react"; // Import useRef and useEffect
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ChatWindow from "./components/ChatWindow";
 import ChatInput from "./components/ChatInput";
-import Welcome from "./components/Welcome";
+import Skills from "./components/Skills";
+import LearningPlan from "./components/LearningPlan";
+import LoadingIndicator from "./components/LoadingIndicator";
 import { useChatbot } from "./hooks/useChatbot.jsx";
+import Header from "./components/Header.jsx";
 
-const App = () => {
+const ChatApp = () => {
   const {
     messages,
     isTyping,
@@ -16,9 +19,20 @@ const App = () => {
     handleKeyPress,
   } = useChatbot();
 
-  const handleSuggestionClick = (suggestionText) => {
-    handleSendMessage(suggestionText);
-  };
+  // The ref for the scrollable container
+  const scrollRef = useRef(null);
+
+  // The auto-scrolling logic
+  useEffect(() => {
+    if (scrollRef.current) {
+      setTimeout(() => {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  }, [messages, isTyping, isLoading]); // Also trigger on isLoading change
 
   return (
     <div className="relative flex flex-col h-screen bg-black text-gray-300 overflow-hidden">
@@ -29,17 +43,12 @@ const App = () => {
 
       <div className="relative z-10 flex flex-col h-full">
         <Header />
-        <div className="flex-1 overflow-y-auto">
-          {messages.length <= 1 ? (
-            <Welcome onSuggestionClick={handleSuggestionClick} />
-          ) : (
-            <MessageList
-              messages={messages}
-              isTyping={isTyping}
-              isLoading={isLoading}
-            />
-          )}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          <ChatWindow messages={messages} isTyping={isTyping} />
         </div>
+
+        {isLoading && <LoadingIndicator />}
+
         <ChatInput
           inputValue={inputValue}
           setInputValue={setInputValue}
@@ -48,6 +57,18 @@ const App = () => {
         />
       </div>
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<ChatApp />} />
+        <Route path="/skills" element={<Skills />} />
+        <Route path="/learning-plan" element={<LearningPlan />} />
+      </Routes>
+    </Router>
   );
 };
 
